@@ -1,8 +1,11 @@
-jupyter:
-	docker-compose up -d jupyter
+#!make
 
-token:
-	docker-compose exec jupyter jupyter notebook list
+jupyter:
+	open $$(docker-compose exec jupyter jupyter notebook list | grep token |  sed -E 's/(token=.*) :: \/app/\1/')
+
+pgweb:
+	export $$(egrep -v '^#' .env | xargs) \
+	&& open http://$${PGWEB_USER}:$${PGWEB_PASSWORD}@localhost:$${PGWEB_PORT}
 
 run:
 	docker-compose exec jupyter $(filter-out $@,$(MAKECMDGOALS))
@@ -12,3 +15,4 @@ main:
 
 shell:
 	docker-compose exec jupyter /bin/bash
+

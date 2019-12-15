@@ -21,13 +21,17 @@ It will do pretty much everything for you! 🎉
 sh init.sh
 ```
 
-### Step2. Copy jupyter token and access to it
+### Step2. Open jupyter notebook
 
 ```sh
-make token
+make jupyter
 ```
 
-- Copy token and acccess to localhost:${JUPYTER_PORT} (default: 9000)
+### Step3. Open pgweb
+
+```sh
+make pgweb
+```
 
 ## References
 

@@ -21,9 +21,3 @@ docker-compose up -d jupyter
 
 # Run init python script
 docker-compose exec jupyter python src/main.py init_db
-
-# Open pgweb
-open http://${PGWEB_USER}:${PGWEB_PASSWORD}@localhost:${PGWEB_PORT}
-
-# Open jupyter notebook
-open $(docker-compose exec jupyter jupyter notebook list | grep token |  sed -E 's/(token=.*) :: \/app/\1/')
