@@ -1,0 +1,42 @@
+version: "3.6"
+services:
+  jupyter:
+    image: youodf/datascience
+    environment:
+      POSTGRES_HOST: ${POSTGRES_HOST}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      PROJECT_NAME: ${PROJECT_NAME}
+      PROJECT_DIR: "/app"
+    volumes:
+      - ./src:/app/src
+      - ./notebook:/app/notebook
+      - ./input:/app/input
+    ports:
+      - "${JUPYTER_PORT}:8888"
+    command: jupyter notebook --ip='0.0.0.0' --allow-root --no-browser
+
+  postgres:
+    image: postgres:10.5
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8"
+    hostname: ${POSTGRES_PASSWORD}
+    volumes:
+      - ./postgres/init:/docker-entrypoint-initdb.d
+      - ./postgres/data:/var/lib/postgresql/data
+      - ./input:/input
+
+  pgweb:
+    image: sosedoff/pgweb
+    ports:
+      - "${PGWEB_PORT}:8081"
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:5432/kaggle?sslmode=disable
+      AUTH_USER: ${PGWEB_USER}
+      AUTH_PASS: ${PGWEB_PASSWORD}
+    depends_on:
+      - postgres
