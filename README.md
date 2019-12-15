@@ -12,116 +12,22 @@ git clone https://github.com/kiccho1101/kaggle-base.git
 cd kaggle-base
 ```
 
-### Step1. Pull/Build Docker image
+### Step1. Run the init.sh
 
-Recommended:
+All you have to do is just run the init.sh.
+It will do pretty much everything for you! 🎉
 
-```sh
-make pull
+```bash
+sh init.sh
 ```
 
-or
+### Step2. Copy jupyter token and access to it
 
 ```sh
-make build
-```
-
-### Step2. Start up jupyter notebook
-
-```sh
-make jupyter
+make token
 ```
 
 - Copy token and acccess to localhost:${JUPYTER_PORT} (default: 9000)
-
-### Step3. Start up DB
-
-```sh
-make start-db
-```
-
-- Then you can access to localhost:${PGWEB_PORT} (default: 9002) to view the database.
-
-### Step4. Split train data into K-fold
-
-```sh
-make kfold CONFIG_NAME(default: lightgbm_0)
-```
-
-### Step5. Create Features
-
-- Create all features.
-
-```sh
-make feature
-```
-
-- Specify a feature that will be created.
-
-```sh
-make feature FEATURE_NAME
-```
-
-### Step6. Cross Validation
-
-```sh
-make cv CONFIG_NAME
-```
-
-### Step7. Create Stats of each table
-
-```sh
-make stats
-```
-
-### Step8. Train and Predict
-
-```sh
-make train-and-predict CONFIG_NAME
-```
-
-### Step9. Submit
-
-- Then submit your output file!🙆
-
-```sh
-./output/submission_xxx.csv
-```
-
-## Commands
-
-### isort, black
-
-```sh
-make format
-```
-
-### flake8, mypy
-
-```sh
-make check
-```
-
-### Reset DB
-
-```sh
-make reset-db
-```
-
-### execute scripts
-
-Recommended:
-
-```sh
-make shell
-python xxx.py
-```
-
-or
-
-```sh
-make run python xxx.py
-```
 
 ## References
 

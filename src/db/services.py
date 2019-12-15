@@ -6,6 +6,7 @@ import pandas as pd
 import psycopg2
 from sqlalchemy import create_engine
 from tqdm import tqdm
+from src.utils.services import to_snake_case
 
 
 class DBServices:
@@ -33,15 +34,14 @@ class DBServices:
                 "There's unknown type in df. Please add the type definition into 'dtype_mapper'"
             )
 
+        create_cols = []
+        if "index" not in df.columns:
+            create_cols.append("index serial")
+        create_cols += [
+            "{} {}".format(col_name, dtype) for col_name, dtype in dtypes.iteritems()
+        ]
         query = "CREATE TABLE IF NOT EXISTS {}.{} ( {} );".format(
-            schema,
-            table_name,
-            ", ".join(
-                [
-                    "{} {}".format(col_name, dtype)
-                    for col_name, dtype in dtypes.iteritems()
-                ]
-            ),
+            schema, table_name, ", ".join(create_cols)
         )
 
         if replace:
@@ -68,28 +68,31 @@ class DBServices:
 
         for i in tqdm(range(int(len(values) / 10000) + 1)):
             if len(values[i * 10000 : (i + 1) * 10000]) > 0:
-                query = "INSERT INTO {}.{} VALUES {};".format(
-                    schema, table_name, ",".join(values[i * 10000 : (i + 1) * 10000])
+                query = "INSERT INTO {}.{} ({}) VALUES {};".format(
+                    schema,
+                    table_name,
+                    ", ".join(to_snake_case(df.columns)),
+                    ",".join(values[i * 10000 : (i + 1) * 10000]),
                 )
                 self.exec_query(query)
 
-    def insert_cols(self, table_name: str, schema: str, df: pd.DataFrame, on: str):
+    def insert_cols(self, schema: str, table_name: str, df: pd.DataFrame, on: str):
         self.df_to_table(
-            table_name=table_name + "_tmp", schema="public", df=df, replace=True
+            table_name=table_name + "_tmp", schema=schema, df=df, replace=True
         )
 
         dtype_mapper = self.dtype_mapper()
 
         queries = [
             """
-          -- ALTER TABLE {0} DROP COLUMN IF EXISTS {1};
-          ALTER TABLE {0} ADD COLUMN IF NOT EXISTS {1} {2};
+          ALTER TABLE {4}.{0} DROP COLUMN IF EXISTS {1};
+          ALTER TABLE {4}.{0} ADD COLUMN IF NOT EXISTS {1} {2};
           UPDATE {0} t1
           SET    {1} = t2.{1}
           FROM   {0}_tmp t2
           WHERE  t1.{3} = t2.{3}
           """.format(
-                table_name, col_name, dtype, on
+                table_name, col_name, dtype, on, schema
             )
             for col_name, dtype in df.dtypes.map(dtype_mapper).iteritems()
         ]
@@ -105,7 +108,7 @@ class DBServices:
                 cur.execute(query)
             conn.commit()
 
-            cur.execute("DROP TABLE {}_tmp;".format(table_name))
+            cur.execute("DROP TABLE {}.{}_tmp;".format(schema, table_name))
             conn.commit()
 
     def exec_query(self, query: str):
@@ -152,7 +155,7 @@ class DBServices:
             df = pd.read_sql(query, con=conn)
             return df
 
-    def table_load(self, table_name: str, cols=None) -> pd.DataFrame:
+    def table_load(self, schema: str, table_name: str, cols=None) -> pd.DataFrame:
 
         with psycopg2.connect(
             user=os.environ["POSTGRES_USER"],
@@ -164,51 +167,16 @@ class DBServices:
 
             if cols is None:
                 df = pd.read_sql(
-                    "SELECT * FROM {} ORDER BY index;".format(table_name), con=conn
-                ).set_index("index")
+                    "SELECT * FROM {}.{} ORDER BY index;".format(schema, table_name),
+                    con=conn,
+                )
 
             else:
-                col_names_snake_case = [
-                    re.sub(
-                        "([A-Z])", lambda x: "_" + x.group(1).lower(), col_name
-                    ).lstrip("_")
-                    for col_name in cols
-                ]
+                col_names_snake_case = to_snake_case(cols)
                 df = pd.read_sql(
-                    "SELECT index, {} FROM {} ORDER BY index;".format(
-                        ", ".join(col_names_snake_case), table_name
+                    "SELECT index, {} FROM {}.{} ORDER BY index;".format(
+                        ", ".join(col_names_snake_case), schema, table_name
                     ),
                     con=conn,
-                ).set_index("index")
+                )
             return df
-
-    def table_write(
-        self,
-        table_name: str,
-        df: pd.DataFrame,
-        schema: str = None,
-        if_exists: str = "replace",
-    ):
-
-        # Rename cols to snake_case
-        df.columns = (
-            pd.Series(df.columns)
-            .map(
-                lambda col: re.sub(
-                    "([A-Z])", lambda x: "_" + x.group(1).lower(), col
-                ).lstrip("_")
-            )
-            .tolist()
-        )
-
-        engine = create_engine(
-            "postgresql://{}:{}@{}:5432/{}".format(
-                os.environ["POSTGRES_USER"],
-                os.environ["POSTGRES_PASSWORD"],
-                os.environ["POSTGRES_HOST"],
-                os.environ["PROJECT_NAME"],
-            )
-        )
-        df.to_sql(
-            name=table_name, schema=schema, con=engine, if_exists=if_exists, index=True
-        )
