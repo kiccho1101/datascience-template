@@ -8,8 +8,8 @@
 ### Step0. Clone the repository
 
 ```sh
-git clone https://github.com/kiccho1101/kaggle-base.git
-cd kaggle-base
+git clone git@github.com:kiccho1101/kaggle-template.git
+cd kaggle-template
 ```
 
 ### Step1. Run the init.sh
