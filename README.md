@@ -12,7 +12,11 @@ git clone git@github.com:kiccho1101/kaggle-template.git
 cd kaggle-template
 ```
 
-### Step1. Run the init.sh
+### Step1. Download train.csv and test.csv into ./input folder
+
+Download them from [https://www.kaggle.com/c/titanic](https://www.kaggle.com/c/titanic)
+
+### Step2. Run the init.sh
 
 All you have to do is just run the init.sh.
 It will do pretty much everything for you! 🎉
@@ -21,13 +25,13 @@ It will do pretty much everything for you! 🎉
 sh init.sh
 ```
 
-### Step2. Open jupyter notebook
+### Step3. Open jupyter notebook
 
 ```sh
 make jupyter
 ```
 
-### Step3. Open pgweb
+### Step4. Open pgweb
 
 ```sh
 make pgweb

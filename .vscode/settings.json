@@ -4,7 +4,6 @@
   "files.trimTrailingWhitespace": true,
   "editor.formatOnSave": true,
   "files.insertFinalNewline": true,
-  "python.pythonPath": "/Users/yodaikishimoto/.local/share/virtualenvs/kaggle-template-5vRcvHSM/bin/python",
   "python.formatting.provider": "black",
   "python.venvPath": ".venv",
   "python.envFile": "${workspaceFolder}/.env",
@@ -22,5 +21,6 @@
     "editor.insertSpaces": true,
     "editor.detectIndentation": true,
     "editor.tabSize": 4
-  }
+  },
+  "python.pythonPath": "/Users/ar-yodai.kishimoto/.local/share/virtualenvs/kaggle-template-RaSV1Xc0/bin/python"
 }

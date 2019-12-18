@@ -2,7 +2,8 @@ import sys
 import os
 
 from src.features.services import FeaturesServices
-from src.init_db.services import init_db
+from src.db.init.services import init_db
+from src.db.kfold.services import split_tables_into_kfold
 
 if __name__ == "__main__":
 
@@ -14,6 +15,10 @@ if __name__ == "__main__":
 
     if args[1] == "init_db":
         init_db()
+
+    if args[1] == "kfold":
+        for kfold_config_name in args[2:]:
+            split_tables_into_kfold(kfold_config_name)
 
     if args[1] == "feature":
         if len(args) >= 3:
