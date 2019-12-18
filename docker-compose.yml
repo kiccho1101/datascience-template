@@ -12,6 +12,7 @@ services:
       - ./src:/app/src
       - ./notebook:/app/notebook
       - ./input:/app/input
+      - ./output:/app/output
     ports:
       - "${JUPYTER_PORT}:8888"
     command: jupyter notebook --ip='0.0.0.0' --allow-root --no-browser

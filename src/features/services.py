@@ -2,6 +2,7 @@ import inspect
 
 from src.utils.services import timer
 from src.features.base import Feature
+from src.features.basic import *
 from typing import List
 
 

@@ -1,25 +1,12 @@
-exp1_config = {
+config = {
     "features": {
         "target": ["survived"],
-        "train": [
-            "fare",
-            "sib_sp",
-            "parch",
-            "family_size",
-            "age_is_null",
-            "age_cut_0",
-            "age_cut_1",
-            "age_cut_2",
-            "age_cut_3",
-            "cabin_is_null",
-            "sex_int",
-            "pclass",
-            "name_titles_int",
-        ],
-        "categorical": ["pclass", "name_titles_int"],
+        "train": ["fare", "sib_sp", "family_size", "pclass"],
     },
+    "kfold_config_name": "basic",
+    "metrics": "accuracy_score",
     "model": {
-        "name": "lightgbm",
+        "name": "LGBMClassifier",
         "params": {
             "boosting_type": "gbdt",
             "objective": "binary",
@@ -27,15 +14,9 @@ exp1_config = {
             "learning_rate": 0.3,
             "max_depth": 25,
             "min_child_weight": 5,
-            "lambda_l1": 7.98854059751254e-08,
-            "lambda_l2": 7.54455056349856e-05,
             "num_leaves": 250,
             "min_child_samples": 65,
-            "feature_fraction": 0.7959426985802768,
-            "bagging_fraction": 0.6763063410560335,
-            "bagging_freq": 6,
             "verbose": -1,
         },
-        "train_params": {"num_boost_round": 350, "verbose_eval": False},
     },
 }

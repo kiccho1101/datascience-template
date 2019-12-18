@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+# Load dotenv
 export $(egrep -v '^#' .env | xargs)
 
 # Initialize PostgreSQL data

@@ -1,2 +1,2 @@
-TARGET_COL = "converted"
-INDEX_COL = "inquiry_id"
+TARGET_COL = "survived"
+INDEX_COL = "passenger_id"

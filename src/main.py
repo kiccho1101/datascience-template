@@ -4,6 +4,7 @@ import os
 from src.features.services import FeaturesServices
 from src.db.init.services import init_db
 from src.db.kfold.services import split_tables_into_kfold
+from src.models.services import Model
 
 if __name__ == "__main__":
 
@@ -27,3 +28,13 @@ if __name__ == "__main__":
             feature_names = []
         f = FeaturesServices()
         f.create_features(feature_names)
+
+    if args[1] == "cv":
+        config_name = args[2]
+        m = Model(config_name)
+        m.cross_validation()
+
+    if args[1] == "predict":
+        config_name = args[2]
+        m = Model(config_name)
+        m.predict()
