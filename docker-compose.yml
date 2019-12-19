@@ -1,7 +1,8 @@
 version: "3.6"
 services:
   jupyter:
-    image: youodf/datascience
+    # image: youodf/datascience
+    build: .
     environment:
       POSTGRES_HOST: ${POSTGRES_HOST}
       POSTGRES_USER: ${POSTGRES_USER}
