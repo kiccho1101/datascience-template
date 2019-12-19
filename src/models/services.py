@@ -1,4 +1,8 @@
-from lightgbm import LGBMClassifier
+from sklearn import linear_model
+from sklearn import svm
+from lightgbm import LGBMClassifier, LGBMRegressor
+from xgboost import XGBClassifier, XGBRegressor
+from catboost import CatBoostClassifier, CatBoostRegressor
 
 import pandas as pd
 import os
@@ -10,7 +14,18 @@ from src.config.common import INDEX_COL, TARGET_COL
 from src.config.services import exp_config
 from sklearn.metrics import accuracy_score
 
-models = {"LGBMClassifier": LGBMClassifier}
+models = {
+    "LGBMClassifier": LGBMClassifier,
+    "LGBMRegressor": LGBMRegressor,
+    "XGBClassifier": XGBClassifier,
+    "XGBRegressor": XGBRegressor,
+    "CatBoostClassifier": CatBoostClassifier,
+    "CatBoostRegressor": CatBoostRegressor,
+    "LinearRegression": linear_model.LinearRegression,
+    "Ridge": linear_model.Ridge,
+    "Lasso": linear_model.Lasso,
+    "SVC": svm.SVC,
+}
 metrics = {"accuracy_score": accuracy_score}
 
 
