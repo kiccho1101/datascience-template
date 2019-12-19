@@ -89,7 +89,7 @@ make format
 
 クラスの書き方でかなり参考にさせていただきました。
 
-### [3.github.com/upura/ml-competition-template-titanic][3]
+### [3.upuraさんのディレクトリ][3]
 
 このディレクトリを作ろうと思ったきっかけになったディレクトリ。
 
