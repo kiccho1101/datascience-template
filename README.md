@@ -89,7 +89,7 @@ make format
 
 クラスの書き方でかなり参考にさせていただきました。
 
-### [3.upura's directory][3]
+### [3.github.com/upura/ml-competition-template-titanic][3]
 
 このディレクトリを作ろうと思ったきっかけになったディレクトリ。
 
