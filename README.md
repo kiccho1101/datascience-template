@@ -18,7 +18,7 @@ Download them from [https://www.kaggle.com/c/titanic](https://www.kaggle.com/c/t
 
 ### Step2. Run the init.sh
 
-All you have to do is just run the init.sh.
+All you have to do is run init.sh.
 It will do pretty much everything for you! 🎉
 
 ```bash
