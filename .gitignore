@@ -3,7 +3,6 @@
 postgres/data
 
 *.csv
-*.txt
 *.zip
 
 # Created by https://www.gitignore.io/api/python,jupyternotebooks
