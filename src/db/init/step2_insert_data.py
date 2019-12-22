@@ -12,4 +12,10 @@ def insert_data():
         _, _, schema, table_name, _ = fname.split("/")
         df = pd.read_csv(fname)
 
-        db.df_to_table(table_name=table_name, schema=schema, df=df, replace=False)
+        db.df_to_table(
+            table_name=table_name,
+            schema=schema,
+            df=df,
+            replace=False,
+            csv_fname=fname.replace("./input", "/input"),
+        )
