@@ -18,6 +18,9 @@ def split_tables_into_kfold(kfold_config_name: str):
         df[INDEX_COL], df[TARGET_COL]
     )
 
+    if db.dtype_mapper()[df[INDEX_COL].dtype] not in ["BIGINT", "DOUBLE PRECISION"]:
+        df[INDEX_COL] = df[INDEX_COL].map(lambda x: "'{}'".format(str(x)))
+
     for n_fold, (train_index, test_index) in enumerate(folds):
         with timer("Split No.{}".format(n_fold)):
             schema = "{}_{}".format(kfold_config_name, n_fold)

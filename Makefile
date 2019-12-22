@@ -1,5 +1,11 @@
 #!make
 
+init:
+	sh init.sh
+
+start:
+	sh start.sh
+
 jupyter:
 	open $$(docker-compose exec jupyter jupyter notebook list | grep token |  sed -E 's/(token=.*) :: \/app/\1/')
 
