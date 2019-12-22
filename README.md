@@ -18,8 +18,8 @@ Download them from [https://www.kaggle.com/c/titanic](https://www.kaggle.com/c/t
 
 ### Step2. Run the init.sh
 
-All you have to do is just run the init.sh.
-It will do pretty much everything for you! 🎉
+All you have to do is run init.sh.
+It will create PostgreSQL container with input data! 🎉
 
 ```bash
 sh init.sh
@@ -34,7 +34,18 @@ make kfold {CONFIG_NAME}
 make kfold basic
 ```
 
-### Step4. Cross Validation
+### Step4. Create features
+
+```sh
+make feature [FEATURE_NAME]
+
+# Example
+make feature FamilySize
+```
+
+![](./gif/feature.gif)
+
+### Step5. Cross Validation
 
 ```sh
 make cv {EXP_NAME}
@@ -43,7 +54,9 @@ make cv {EXP_NAME}
 make cv exp1
 ```
 
-### Step5. Create submit file
+![](./gif/cv.gif)
+
+### Step6. Create submit file
 
 ```sh
 make predict {EXP_NAME}
@@ -51,6 +64,9 @@ make predict {EXP_NAME}
 # Example
 make predict exp1
 ```
+
+![](./gif/predict.gif)
+
 
 ## Utilities
 
