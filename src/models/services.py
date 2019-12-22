@@ -10,8 +10,7 @@ import pickle
 import glob
 
 from src.db.services import DBServices
-from src.config.common import INDEX_COL, TARGET_COL
-from src.config.services import exp_config
+from src.config.services import INDEX_COL, TARGET_COL, exp_config
 from sklearn.metrics import accuracy_score
 
 models = {

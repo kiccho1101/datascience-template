@@ -1,5 +1,4 @@
-from src.config.kfold import kfold_config
-from src.config.common import INDEX_COL, TARGET_COL
+from src.config.services import INDEX_COL, TARGET_COL, kfold_config
 from src.db.services import DBServices
 from src.utils.services import timer
 
