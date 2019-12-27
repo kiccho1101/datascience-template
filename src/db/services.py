@@ -135,38 +135,49 @@ class DBServices:
                     self.exec_query(query)
 
     def insert_cols(self, schema: str, table_name: str, df: pd.DataFrame, on: str):
-        self.df_to_table(
-            table_name=table_name + "_tmp", schema=schema, df=df, replace=True
-        )
 
         dtype_mapper = self.dtype_mapper()
+        dtypes = df.dtypes.map(dtype_mapper)
 
-        queries = [
-            """
-          -- ALTER TABLE {4}.{0} DROP COLUMN IF EXISTS {1};
-          ALTER TABLE {4}.{0} ADD COLUMN IF NOT EXISTS {1} {2};
-          UPDATE {4}.{0} AS t1
-          SET    {1} = t2.{1}
-          FROM   {4}.{0}_tmp AS t2
-          WHERE  t1.{3} = t2.{3}
-          """.format(
-                table_name, col_name, dtype, on, schema
-            )
-            for col_name, dtype in df.dtypes.map(dtype_mapper).iteritems()
-        ]
+        self.create_index(schema, table_name, [on])
 
-        with psycopg2.connect(
-            user=os.environ["POSTGRES_USER"],
-            password=os.environ["POSTGRES_PASSWORD"],
-            host=os.environ["POSTGRES_HOST"],
-            port=5432,
-            database=os.environ["PROJECT_NAME"],
-        ) as conn, conn.cursor() as cur:
-            for query in queries:
-                cur.execute(query)
-            conn.commit()
+        for col_name, dtype in tqdm(df.dtypes.map(dtype_mapper).iteritems()):
+            if col_name != on:
+                self.exec_query(
+                    "ALTER TABLE {0}.{1} ADD COLUMN IF NOT EXISTS {2} {3};".format(
+                        schema, table_name, col_name, dtype
+                    )
+                )
 
-        self.exec_query("DROP TABLE {}.{}_tmp;".format(schema, table_name))
+                values = [
+                    "({}, {})".format(
+                        "{}".format(str(on_value))
+                        if dtypes[on] in ["DOUBLE PRECISION", "BIGINT"]
+                        else "'{}'".format(str(on_value).replace("'", "''")),
+                        "{}".format(str(col_value))
+                        if dtypes[col_name] in ["DOUBLE PRECISION", "BIGINT"]
+                        else "'{}'".format(str(col_value).replace("'", "''")),
+                    )
+                    for on_value, col_value in df[[on, col_name]].values
+                ]
+
+                for i in tqdm(range(int(len(values) / 1000) + 1)):
+                    if len(values[i * 1000 : (i + 1) * 1000]) > 0:
+                        query = """
+                            UPDATE {0}.{1} AS t1
+                            SET {2} = t2.{2}
+                            FROM (VALUES
+                                {3}
+                            ) AS t2({4}, {2})
+                            WHERE t1.{4} = t2.{4}
+                        """.format(
+                            schema,
+                            table_name,
+                            col_name,
+                            ",".join(values[i * 1000 : (i + 1) * 1000]),
+                            on,
+                        )
+                        self.exec_query(query)
 
     def find_schema(self, like: str, unlike=None) -> pd.DataFrame:
         query = "SELECT schema_name FROM information_schema.schemata"
