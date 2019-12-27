@@ -7,6 +7,7 @@ import psycopg2
 from sqlalchemy import create_engine
 from tqdm import tqdm
 from src.utils.services import to_snake_case
+from typing import List
 
 
 class DBServices:
@@ -20,6 +21,17 @@ class DBServices:
             np.dtype("datetime64[ns]"): "TIMESTAMP",
         }
         return dtype_mapper
+
+    def conn(self):
+        conn = psycopg2.connect(
+            user=os.environ["POSTGRES_USER"],
+            password=os.environ["POSTGRES_PASSWORD"],
+            host=os.environ["POSTGRES_HOST"],
+            port=5432,
+            database=os.environ["PROJECT_NAME"],
+        )
+        cur = conn.cursor()
+        return conn, cur
 
     def exec_query(self, query: str):
 
@@ -45,6 +57,15 @@ class DBServices:
             df = pd.read_sql(query, con=conn)
 
         return df
+
+    def create_index(self, schema: str, table_name: str, cols: List[str]):
+        query = """
+            CREATE INDEX IF NOT EXISTS
+            {0}_{1}_{2}_idx ON {0}.{1} ({3})
+        """.format(
+            schema, table_name, "_".join(cols), ", ".join(cols)
+        )
+        self.exec_query(query)
 
     def df_to_table(
         self,
