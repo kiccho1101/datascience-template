@@ -18,7 +18,7 @@ class FamilySize(Feature):
                     )
                 )
                 self.db.insert_cols(
-                    schema=schema, table_name=table_name, df=df, on="passenger_id"
+                    schema=schema, table_name=table_name, df=df, on=["passenger_id"]
                 )
 
 
@@ -32,5 +32,5 @@ class PclassOhe(Feature):
                 [combined, pd.get_dummies(combined["pclass"], prefix="pclass")], axis=1
             )
             train, test = combined.iloc[: len(train)], combined[len(train) :]
-            self.db.insert_cols(schema, "train", train, "passenger_id")
-            self.db.insert_cols(schema, "test", test, "passenger_id")
+            self.db.insert_cols(schema, "train", train, ["passenger_id"])
+            self.db.insert_cols(schema, "test", test, ["passenger_id"])

@@ -3,6 +3,7 @@ import re
 
 import numpy as np
 import pandas as pd
+import json
 import psycopg2
 from sqlalchemy import create_engine
 from tqdm import tqdm
@@ -134,15 +135,23 @@ class DBServices:
                     )
                     self.exec_query(query)
 
-    def insert_cols(self, schema: str, table_name: str, df: pd.DataFrame, on: str):
+    def insert_cols(
+        self,
+        schema: str,
+        table_name: str,
+        df: pd.DataFrame,
+        on: List[str],
+        split_num: int = 100,
+    ):
 
         dtype_mapper = self.dtype_mapper()
         dtypes = df.dtypes.map(dtype_mapper)
 
-        self.create_index(schema, table_name, [on])
+        self.create_index(schema, table_name, on)
 
         for col_name, dtype in tqdm(df.dtypes.map(dtype_mapper).iteritems()):
-            if col_name != on:
+            if col_name not in on:
+                print(col_name)
                 self.exec_query(
                     "ALTER TABLE {0}.{1} ADD COLUMN IF NOT EXISTS {2} {3};".format(
                         schema, table_name, col_name, dtype
@@ -150,32 +159,36 @@ class DBServices:
                 )
 
                 values = [
-                    "({}, {})".format(
-                        "{}".format(str(on_value))
-                        if dtypes[on] in ["DOUBLE PRECISION", "BIGINT"]
-                        else "'{}'".format(str(on_value).replace("'", "''")),
-                        "{}".format(str(col_value))
-                        if dtypes[col_name] in ["DOUBLE PRECISION", "BIGINT"]
-                        else "'{}'".format(str(col_value).replace("'", "''")),
+                    "({})".format(
+                        ", ".join(
+                            [
+                                "{}".format(str(v))
+                                if dtypes[k] in ["DOUBLE PRECISION", "BIGINT"]
+                                else "'{}'".format(str(v).replace("'", "''"))
+                                for k, v in d.items()
+                            ]
+                        )
                     )
-                    for on_value, col_value in df[[on, col_name]].values
+                    for d in json.loads(df[on + [col_name]].to_json(orient="records"))
                 ]
 
-                for i in tqdm(range(int(len(values) / 1000) + 1)):
-                    if len(values[i * 1000 : (i + 1) * 1000]) > 0:
+                for i in tqdm(range(int(len(values) / split_num) + 1)):
+                    if len(values[i * split_num : (i + 1) * split_num]) > 0:
                         query = """
                             UPDATE {0}.{1} AS t1
                             SET {2} = t2.{2}
                             FROM (VALUES
                                 {3}
                             ) AS t2({4}, {2})
-                            WHERE t1.{4} = t2.{4}
+                            WHERE
+                                {5}
                         """.format(
                             schema,
                             table_name,
                             col_name,
-                            ",".join(values[i * 1000 : (i + 1) * 1000]),
-                            on,
+                            ",".join(values[i * split_num : (i + 1) * split_num]),
+                            ", ".join(on),
+                            " AND ".join(["t1.{0} = t2.{0}".format(col) for col in on]),
                         )
                         self.exec_query(query)
 
