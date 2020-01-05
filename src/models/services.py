@@ -14,6 +14,7 @@ import glob
 
 from src.db.services import DBServices
 from src.config.services import INDEX_COL, TARGET_COL, exp_config
+from src.utils.services import now
 
 models = {
     "LGBMClassifier": LGBMClassifier,
@@ -54,11 +55,7 @@ class Model:
 
         with open("./output/cv_results/{}.txt".format(self.config_name), "a") as f:
             f.write("==================================================\n")
-            f.write(
-                "Date: {}\n".format(
-                    pd.to_datetime("today").strftime("%Y-%m-%d %H:%M:%S")
-                )
-            )
+            f.write("Date: {}\n".format(now().strftime("%Y-%m-%d %H:%M:%S")))
 
         for schema in self.schemas:
             train = self.db.table_load(
@@ -142,7 +139,7 @@ class Model:
     def create_submission(self, result_df: pd.DataFrame):
 
         submission_file_prefix = "./output/submission/submission_{}".format(
-            pd.to_datetime("today").strftime("%Y-%m-%d")
+            now().strftime("%Y-%m-%d")
         )
 
         submission_no = len(glob.glob(submission_file_prefix + "_*.csv")) + 1
