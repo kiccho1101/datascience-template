@@ -18,5 +18,6 @@ config = {
             "min_child_samples": 65,
             "verbose": -1,
         },
+        "fit_params": {"eval_metric": "l2"},
     },
 }

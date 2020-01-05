@@ -4,14 +4,16 @@ from lightgbm import LGBMClassifier, LGBMRegressor
 from xgboost import XGBClassifier, XGBRegressor
 from catboost import CatBoostClassifier, CatBoostRegressor
 
+from sklearn.metrics import accuracy_score, mean_squared_log_error
+
 import pandas as pd
+import numpy as np
 import os
 import pickle
 import glob
 
 from src.db.services import DBServices
 from src.config.services import INDEX_COL, TARGET_COL, exp_config
-from sklearn.metrics import accuracy_score
 
 models = {
     "LGBMClassifier": LGBMClassifier,
@@ -25,7 +27,11 @@ models = {
     "Lasso": linear_model.Lasso,
     "SVC": svm.SVC,
 }
-metrics = {"accuracy_score": accuracy_score}
+metrics = {
+    "accuracy_score": accuracy_score,
+    "MSLE": mean_squared_log_error,
+    "RMSLE": lambda x, y: np.sqrt(mean_squared_log_error(x, y)),
+}
 
 
 class Model:
@@ -43,6 +49,17 @@ class Model:
         self.metrics = metrics[self.config["metrics"]]
 
     def cross_validation(self):
+        if not os.path.exists("./output/cv_results"):
+            os.makedirs("./output/cv_results")
+
+        with open("./output/cv_results/{}.txt".format(self.config_name), "a") as f:
+            f.write("==================================================\n")
+            f.write(
+                "Date: {}\n".format(
+                    pd.to_datetime("today").strftime("%Y-%m-%d %H:%M:%S")
+                )
+            )
+
         for schema in self.schemas:
             train = self.db.table_load(
                 schema=schema,
@@ -56,15 +73,20 @@ class Model:
             )
 
             self.model = models[self.model_name](**self.config["model"]["params"])
-            self.model.fit(train[self.train_cols], train[self.target_col].iloc[:, 0])
+            self.model.fit(
+                train[self.train_cols],
+                train[self.target_col].iloc[:, 0],
+                **self.config["model"]["fit_params"]
+            )
             pred = self.model.predict(test[self.train_cols])
 
             score = self.metrics(test[self.target_col].iloc[:, 0], pred)
             print()
-            print("========================================")
+            print("==================================================")
             print("{}: {} Score ::: {}".format(self.config_name, schema, score))
-            print("========================================")
-            print()
+            print("==================================================")
+            with open("./output/cv_results/{}.txt".format(self.config_name), "a") as f:
+                f.write("{}: {} Score ::: {}\n".format(self.config_name, schema, score))
 
             result_df = pd.DataFrame(
                 {
@@ -86,6 +108,10 @@ class Model:
                 "./output/models/{}/{}.pickle".format(self.config_name, schema), "wb"
             ) as f:
                 pickle.dump(self.model, f)
+
+        with open("./output/cv_results/{}.txt".format(self.config_name), "a") as f:
+            f.write("==================================================\n")
+            f.write("\n")
 
     def predict(self):
         schema = "public"
