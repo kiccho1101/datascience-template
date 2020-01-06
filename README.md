@@ -8,7 +8,7 @@
 ### Step0. Clone the repository
 
 ```sh
-git clone git@github.com:kiccho1101/kaggle-template.git
+git clone git@github.com:kiccho1101/datascience-template.git
 cd kaggle-template
 ```
 
