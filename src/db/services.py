@@ -1,23 +1,36 @@
-import os
-import re
-
-import numpy as np
-import pandas as pd
-import json
 import psycopg2
-from sqlalchemy import create_engine
+import pandas as pd
+import numpy as np
+import os
 from tqdm import tqdm
 from src.utils.services import to_snake_case
+import json
+
 from typing import List
 
 
 class DBServices:
+    def __init__(
+        self,
+        user: str = os.environ["POSTGRES_USER"],
+        password: str = os.environ["POSTGRES_PASSWORD"],
+        host: str = os.environ["POSTGRES_HOST"],
+        port: int = int(os.environ["POSTGRES_PORT"]),
+        database: str = os.environ["POSTGRES_DATABASE"],
+    ):
+        self.user = user
+        self.password = password
+        self.host = host
+        self.port = port
+        self.database = database
+
     def dtype_mapper(self):
         dtype_mapper = {
             np.dtype("object"): "TEXT",
             np.dtype("int32"): "BIGINT",
             np.dtype("int64"): "BIGINT",
             np.dtype("uint8"): "BIGINT",
+            np.dtype("float32"): "DOUBLE PRECISION",
             np.dtype("float64"): "DOUBLE PRECISION",
             np.dtype("datetime64[ns]"): "TIMESTAMP",
         }
@@ -25,39 +38,36 @@ class DBServices:
 
     def conn(self):
         conn = psycopg2.connect(
-            user=os.environ["POSTGRES_USER"],
-            password=os.environ["POSTGRES_PASSWORD"],
-            host=os.environ["POSTGRES_HOST"],
-            port=5432,
-            database=os.environ["PROJECT_NAME"],
+            user=self.user,
+            password=self.password,
+            host=self.host,
+            port=self.port,
+            database=self.database,
         )
         cur = conn.cursor()
         return conn, cur
 
     def exec_query(self, query: str):
-
         with psycopg2.connect(
-            user=os.environ["POSTGRES_USER"],
-            password=os.environ["POSTGRES_PASSWORD"],
-            host=os.environ["POSTGRES_HOST"],
-            port=5432,
-            database=os.environ["PROJECT_NAME"],
+            user=self.user,
+            password=self.password,
+            host=self.host,
+            port=self.port,
+            database=self.database,
         ) as conn, conn.cursor() as cur:
             cur.execute(query)
             conn.commit()
 
-    def get_df(self, query: str):
-
+    def get_df(self, query: str) -> pd.DataFrame:
         with psycopg2.connect(
-            user=os.environ["POSTGRES_USER"],
-            password=os.environ["POSTGRES_PASSWORD"],
-            host=os.environ["POSTGRES_HOST"],
-            port=5432,
-            database=os.environ["PROJECT_NAME"],
+            user=self.user,
+            password=self.password,
+            host=self.host,
+            port=self.port,
+            database=self.database,
         ) as conn:
             df = pd.read_sql(query, con=conn)
-
-        return df
+            return df
 
     def create_index(self, schema: str, table_name: str, cols: List[str]):
         query = """
@@ -70,8 +80,8 @@ class DBServices:
 
     def df_to_table(
         self,
-        table_name: str,
         schema: str,
+        table_name: str,
         df: pd.DataFrame,
         replace: bool,
         csv_fname: str = "",
@@ -101,39 +111,17 @@ class DBServices:
         self.exec_query(query)
 
         if csv_fname != "":
-            query = "COPY {} FROM '{}' DELIMITER ',' CSV HEADER".format(
-                table_name, csv_fname
+            query = "COPY {}.{} FROM '{}' DELIMITER ',' CSV HEADER".format(
+                schema, table_name, csv_fname
             )
             self.exec_query(query)
 
         else:
-            values = [
-                "({})".format(
-                    ", ".join(
-                        [
-                            # If it's NaN, set NULL
-                            "NULL" if value != value
-                            # If it's number, set str without ''
-                            else "{}".format(str(value))
-                            if dtypes[key] in ["DOUBLE PRECISION", "BIGINT"]
-                            # If else, set str with ''
-                            else "'{}'".format(str(value).replace("'", "''"))
-                            for key, value in d.items()
-                        ]
-                    )
-                )
-                for d in df.to_dict(orient="records")
-            ]
-
-            for i in tqdm(range(int(len(values) / 10000) + 1)):
-                if len(values[i * 10000 : (i + 1) * 10000]) > 0:
-                    query = "INSERT INTO {}.{} ({}) VALUES {};".format(
-                        schema,
-                        table_name,
-                        ", ".join(to_snake_case(df.columns)),
-                        ",".join(values[i * 10000 : (i + 1) * 10000]),
-                    )
-                    self.exec_query(query)
+            df.to_csv("./input/tmp.csv", header=True, index=True, index_label="index")
+            query = "COPY {}.{} FROM '{}' DELIMITER ',' CSV HEADER".format(
+                schema, table_name, "/input/tmp.csv"
+            )
+            self.exec_query(query)
 
     def insert_cols(
         self,
