@@ -15,7 +15,12 @@ if __name__ == "__main__":
         os._exit(0)
 
     if args[1] == "init_db":
-        init_db()
+        if len(args) >= 3:
+            service_names = args[2:]
+        else:
+            service_names = ["snake_case", "schema", "insert", "index"]
+        for service_name in service_names:
+            init_db(service_name)
 
     if args[1] == "kfold":
         for kfold_config_name in args[2:]:

@@ -26,7 +26,7 @@ shell:
 	docker-compose exec jupyter /bin/bash
 
 init_db:
-	docker-compose exec jupyter python src/main.py init_db
+	docker-compose exec jupyter python src/main.py init_db $(filter-out $@,$(MAKECMDGOALS))
 
 kfold:
 	docker-compose exec jupyter python src/main.py kfold $(filter-out $@,$(MAKECMDGOALS))
